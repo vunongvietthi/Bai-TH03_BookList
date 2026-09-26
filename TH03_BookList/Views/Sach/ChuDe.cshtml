@@ -1,0 +1,44 @@
+﻿@model List<ChuDe>
+@{
+    ViewData["Title"] = "Chủ đề sách";
+}
+<h2>@ViewData["Title"]</h2>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+}
+
+<a asp-action="ChuDeEdit" asp-route-id=0 class="btn btn-primary mb-3">Thêm chủ đề</a>
+
+@if (Model != null && Model.Any())
+{
+    <table class="table table-bordered">
+        <tr>
+            <th>MCD</th>
+            <th>Tên chủ đề</th>
+            <th></th>
+        </tr>
+        @foreach (ChuDe cd in Model)
+        {
+            <tr>
+                <td>@cd.Mcd</td>
+                <td>@cd.TenChuDe</td>
+                <td>
+                    <a asp-action="ChuDeEdit" asp-route-id="@cd.Mcd" class="btn btn-warning btn-sm">Sửa</a>
+                    <form asp-action="ChuDeDelete" asp-route-id="@cd.Mcd" method="post" style="display:inline;">
+                        <button type="submit"
+                                class="btn btn-sm btn-danger"
+                                onclick="return confirm('Chủ đề cần xóa phải không có cuốn sách nào. Bạn có chắc chắn muốn xóa chủ đề này không?');">
+                            Xóa
+                        </button>
+                    </form>
+                </td>
+            </tr>
+        }
+    </table>
+}
+else
+{
+    <p>Không có dữ liệu.</p>
+}

@@ -1,0 +1,44 @@
+﻿@model List<Dictionary<string, object>>
+@{
+    ViewData["Title"] = "Truy vấn CSDL QLBanSach";
+}
+<h2>@ViewData["Title"]</h2>
+<form method="get" asp-action="QueryDemo" id="filterForm">
+    <div class="row mb-3">
+        <div class="col-md-4">
+            <label>Lọc theo danh mục:</label>
+            <!-- Thêm onchange="this.form.submit()" để tự động submit khi chọn -->
+            <select name="id" width="100%"
+                    asp-items="ViewBag.Queries"
+                    class="form-control"
+                    onchange="this.form.submit()">
+                <option value="">-- Tất cả --</option>
+            </select>
+        </div>
+    </div>
+</form>
+
+@if (Model != null && Model.Any())
+{
+    <table class="table table-bordered table-striped">
+        <thead>
+            <tr>
+                @foreach (var key in Model.First().Keys)
+                {
+                    <th>@key</th>
+                }
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var row in Model)
+            {
+                <tr>
+                    @foreach (var key in row.Keys)
+                    {
+                        <td>@row[key]</td>
+                    }
+                </tr>
+            }
+        </tbody>
+    </table>
+}
