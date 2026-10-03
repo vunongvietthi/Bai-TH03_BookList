@@ -25,7 +25,7 @@
             <tr>
                 @foreach (var key in Model.First().Keys)
                 {
-                    <th>@key</th>
+                    <th class="@(key == "HinhMinhHoa" ? "text-center" : "")">@key</th>
                 }
             </tr>
         </thead>
@@ -35,7 +35,27 @@
                 <tr>
                     @foreach (var key in row.Keys)
                     {
-                        <td>@row[key]</td>
+                        @if (key == "HinhMinhHoa")
+                        {
+                            var ten = row[key]?.ToString() ?? "";
+                            var file = ten.Contains(".") ? ten : ten + ".jpg";
+                            <td style="text-align:center;">
+                                <img src="~/images/@file"
+                                     onerror="this.onerror=null;this.src='/images/no-image.jpg';"
+                                     alt="@ten"
+                                     style="max-width:80px; max-height:80px;" />
+                            </td>
+                        }
+                        else if (key == "Href")
+                        {
+                            var link = row[key]?.ToString() ?? "";
+                            var urlDayDu = link.StartsWith("http") ? link : "https://" + link;
+                            <td><a href="@urlDayDu" target="_blank">@link</a></td>
+                        }
+                        else
+                        {
+                            <td>@row[key]</td>
+                        }
                     }
                 </tr>
             }

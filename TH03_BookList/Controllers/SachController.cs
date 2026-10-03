@@ -85,146 +85,142 @@ namespace TH03_BookList.Controllers
         }
 
         #endregion
+
         #region "QueryDemo"
 
         // GET: Sach/QueryDemo
-        public IActionResult QueryDemo(int? id)
+        public IActionResult QueryDemo(int? id, int mcd = 1)
         {
             List<SachQuery> queries = new List<SachQuery>
     {
-        new SachQuery { Id = 1, QueryName = "Lấy tất cả danh mục chủ đề" },
-        new SachQuery { Id = 2, QueryName = "Lấy danh mục chủ đề có sách" },
-        new SachQuery { Id = 3, QueryName = "Lấy danh mục sách có tt NXB, không mô tả" },
-        new SachQuery { Id = 4, QueryName = "Lấy danh mục sách có tt NXB, tác giả, không mô tả" },
-        new SachQuery { Id = 5, QueryName = "Lấy danh mục sách mới" },
-        new SachQuery { Id = 7, QueryName = "Lấy danh mục sách bán chạy" },
-        new SachQuery { Id = 9, QueryName = "Lấy danh mục quảng cáo còn hạn" }
+        new SachQuery { Id = 1, QueryName = "1. Danh mục chủ đề (mã, tên)" },
+        new SachQuery { Id = 2, QueryName = "2. Danh mục chủ đề (mã, tên, số lượng sách)" },
+        new SachQuery { Id = 3, QueryName = "3. Danh mục chủ đề có sách (mã, tên)" },
+        new SachQuery { Id = 4, QueryName = "4. Danh mục sách thuộc một chủ đề cụ thể" },
+        new SachQuery { Id = 5, QueryName = "5. Danh mục 5 sách mới (mã, tên, ảnh)" },
+        new SachQuery { Id = 6, QueryName = "6. Danh mục 5 sách bán chạy (mã, tên, ảnh)" },
+        new SachQuery { Id = 7, QueryName = "7. Danh mục quảng cáo còn hạn" },
+        new SachQuery { Id = 8, QueryName = "8. Danh mục tác giả của cuốn sách mã 2" },
+        new SachQuery { Id = 9, QueryName = "9. Danh sách đơn hàng đã giao" }
     };
 
             // Giữ lại giá trị được chọn trên Dropdown sau khi reload
             ViewBag.Queries = new SelectList(queries, "Id", "QueryName", id);
 
             if (id.HasValue && id.Value == 1)
-                return View(GetChuDesAsync());
+                return View(GetChuDe());
             if (id.HasValue && id.Value == 2)
-                return View(GetChuDesCoSach());
+                return View(GetChuDeVaSoLuongSach());
             if (id.HasValue && id.Value == 3)
-                return View(GetSachs_NXB());
+                return View(GetChuDeCoSach());
             if (id.HasValue && id.Value == 4)
-                return View(GetSachs_NXB_TG());
+                return View(GetSachTheoChuDe(mcd));
             if (id.HasValue && id.Value == 5)
                 return View(GetSachMoi());
-            if (id.HasValue && id.Value == 7)
+            if (id.HasValue && id.Value == 6)
                 return View(GetSachBanChay());
-            if (id.HasValue && id.Value == 9)
+            if (id.HasValue && id.Value == 7)
                 return View(GetQuangCaoConHan());
+            if (id.HasValue && id.Value == 8)
+                return View(GetTacGiaCuaSach(2));
+            if (id.HasValue && id.Value == 9)
+                return View(GetDonHangDaGiao());
 
-            return View(null);
+            return View();
         }
 
-        // Lấy tất cả danh mục chủ đề
-        private List<Dictionary<string, object>> GetChuDesAsync()
+        // 1. Chủ đề: mã, tên
+        private List<Dictionary<string, object>> GetChuDe()
         {
-            var query = _context.ChuDes.Select(c => new
-            {
-                c.Mcd,
-                c.TenChuDe
-            }).ToList();
-
+            var query = _context.ChuDes
+                .Select(c => new { c.Mcd, c.TenChuDe })
+                .ToList();
             return ToDictionaryList(query);
         }
 
-        // Lấy danh sách các chủ đề đã có sách, kèm số lượng sách
-        private List<Dictionary<string, object>> GetChuDesCoSach()
+        // 2. Chủ đề: mã, tên, số lượng sách
+        private List<Dictionary<string, object>> GetChuDeVaSoLuongSach()
         {
-            var query = _context.ChuDes.Select(c => new
-            {
-                TenChuDe = c.TenChuDe,
-                TongSoSach = c.Saches.Count(),
-                TongLuotBan = c.Saches.Sum(s => (int?)s.SoLuongBan) ?? 0
-            }).Where(x => x.TongSoSach > 0).ToList();
-
+            var query = _context.ChuDes
+                .Select(c => new { c.Mcd, c.TenChuDe, SoLuongSach = c.Saches.Count() })
+                .ToList();
             return ToDictionaryList(query);
         }
 
-        // Lấy danh mục sách có thông tin NXB, không có mô tả
-        private List<Dictionary<string, object>> GetSachs_NXB()
+        // 3. Chủ đề có sách
+        private List<Dictionary<string, object>> GetChuDeCoSach()
         {
-            var query = _context.Saches.Select(s => new
-            {
-                s.Ms,
-                s.TenSach,
-                s.DonGia,
-                TenNhaXuatBan = s.MnxbNavigation != null ? s.MnxbNavigation.TenNhaXuatBan : null
-            }).ToList();
-
+            var query = _context.ChuDes
+                .Where(c => c.Saches.Any())
+                .Select(c => new { c.Mcd, c.TenChuDe })
+                .ToList();
             return ToDictionaryList(query);
         }
 
-        // Lấy danh mục sách có thông tin NXB, tác giả, không có mô tả
-        private List<Dictionary<string, object>> GetSachs_NXB_TG()
+        // 4. Sách thuộc một chủ đề cụ thể
+        private List<Dictionary<string, object>> GetSachTheoChuDe(int mcd)
         {
-            var query = _context.Saches.Select(s => new
-            {
-                s.Ms,
-                s.TenSach,
-                s.DonGia,
-                TenNhaXuatBan = s.MnxbNavigation != null ? s.MnxbNavigation.TenNhaXuatBan : null,
-                TacGia = string.Join(", ", s.ThamGia.Select(tg => tg.MtgNavigation.TenTacGia))
-            }).ToList();
-
+            var query = _context.Saches
+                .Where(s => s.Mcd == mcd)
+                .Select(s => new { s.Ms, s.TenSach, s.DonGia, s.HinhMinhHoa })
+                .ToList();
             return ToDictionaryList(query);
         }
 
-        // Lấy danh mục sách mới (10 sách cập nhật gần nhất)
+        // 5. 5 sách mới nhất theo ngày cập nhật
         private List<Dictionary<string, object>> GetSachMoi()
         {
             var query = _context.Saches
                 .OrderByDescending(s => s.NgayCapNhat)
-                .Take(10)
-                .Select(s => new
-                {
-                    s.Ms,
-                    s.TenSach,
-                    s.NgayCapNhat
-                }).ToList();
-
+                .Take(5)
+                .Select(s => new { s.Ms, s.TenSach, s.HinhMinhHoa })
+                .ToList();
             return ToDictionaryList(query);
         }
 
-        // Lấy danh mục sách bán chạy (10 sách bán nhiều nhất)
+        // 6. 5 sách bán chạy theo tổng số lượng trong chi tiết đơn hàng
         private List<Dictionary<string, object>> GetSachBanChay()
         {
             var query = _context.Saches
-                .OrderByDescending(s => s.SoLuongBan)
-                .Take(10)
-                .Select(s => new
-                {
-                    s.Ms,
-                    s.TenSach,
-                    s.SoLuongBan
-                }).ToList();
-
+                .Where(s => s.CtDatHangs.Any())
+                .OrderByDescending(s => s.CtDatHangs.Sum(ct => ct.SoLuong))
+                .Take(5)
+                .Select(s => new { s.Ms, s.TenSach, s.HinhMinhHoa })
+                .ToList();
             return ToDictionaryList(query);
         }
 
-        // Lấy danh mục quảng cáo còn hạn
+        // 7. Quảng cáo còn hạn
         private List<Dictionary<string, object>> GetQuangCaoConHan()
         {
+            var now = DateTime.Now;
             var query = _context.QuangCaos
-                .Where(q => q.NgayHetHan >= DateTime.Now)
-                .Select(q => new
-                {
-                    q.Stt,
-                    q.TenCty,
-                    q.NgayBatDau,
-                    q.NgayHetHan
-                }).ToList();
-
+                .Where(q => q.NgayBatDau <= now && q.NgayHetHan >= now)
+                .Select(q => new { q.Stt, q.TenCty, q.HinhMinhHoa, q.Href, q.NgayBatDau, q.NgayHetHan })
+                .ToList();
             return ToDictionaryList(query);
         }
 
-        // Hàm dùng chung: chuyển kết quả truy vấn (kiểu vô danh) sang Dictionary
+        // 8. Tác giả tham gia viết một cuốn sách
+        private List<Dictionary<string, object>> GetTacGiaCuaSach(int ms)
+        {
+            var query = _context.ThamGia
+                .Where(t => t.Ms == ms)
+                .Select(t => new { t.MtgNavigation.Mtg, t.MtgNavigation.TenTacGia })
+                .ToList();
+            return ToDictionaryList(query);
+        }
+
+        // 9. Đơn hàng đã giao
+        private List<Dictionary<string, object>> GetDonHangDaGiao()
+        {
+            var query = _context.DonDatHangs
+                .Where(d => d.DaGiaoHang == true)
+                .Select(d => new { d.Sdh, d.Mkh, d.NgayDatHang, d.NgayGiaoHang, d.TriGia })
+                .ToList();
+            return ToDictionaryList(query);
+        }
+
         private List<Dictionary<string, object>> ToDictionaryList<T>(List<T> vmList)
         {
             var resultList = vmList.Select(item => item!.GetType()
